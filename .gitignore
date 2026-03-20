@@ -1,0 +1,30 @@
+# =============================================================================
+# .gitignore — Files that must NEVER be committed to version control
+# =============================================================================
+
+# Terraform state (contains all resource IDs, IPs, and secrets in plaintext)
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Terraform variable values (contains passwords)
+terraform.tfvars
+
+# SSH keys
+*.pem
+*.key
+
+# IAM policy files created during setup
+trust-policy.json
+iam_policy.json
+extra-elb-policy.json
+current-policy.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/

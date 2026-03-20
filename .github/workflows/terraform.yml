@@ -1,0 +1,73 @@
+# =============================================================================
+# .github/workflows/terraform.yml — Infrastructure CI/CD Pipeline
+# =============================================================================
+# This pipeline runs on every push/PR that changes Terraform files:
+#   1. Validates the Terraform syntax
+#   2. Scans for security misconfigurations with tfsec
+#   3. Runs terraform plan (shows what would change)
+#   4. Applies changes (only on merge to main)
+
+name: Terraform Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths: ['terraform/**']
+  pull_request:
+    branches: [main]
+    paths: ['terraform/**']
+
+jobs:
+  terraform:
+    name: Validate, Scan & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # Download repository code to the runner
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Authenticate with AWS using secrets stored in GitHub
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Install Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      # Download providers and modules
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      # Check syntax is valid (doesn't talk to AWS)
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      # Security scan — flags misconfigurations in the Terraform code
+      # soft_fail: true means it reports issues but doesn't block the pipeline
+      # (we expect findings because of our intentional weaknesses)
+      - name: Security Scan with tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform
+          soft_fail: true
+
+      # Show what would be created/changed/destroyed
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan -no-color
+        continue-on-error: true
+
+      # Only deploy when code is merged to main (not on PRs)
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: terraform
+        run: terraform apply -auto-approve

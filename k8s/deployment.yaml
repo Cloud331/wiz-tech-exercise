@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasky
+  namespace: wiz-app
+  labels:
+    app: tasky
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tasky
+  template:
+    metadata:
+      labels:
+        app: tasky
+    spec:
+      serviceAccountName: tasky-sa
+      containers:
+        - name: tasky
+          image: 864981756286.dkr.ecr.us-east-1.amazonaws.com/wiz-tasky:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://dbadmin:dbpassword331@10.0.1.182:27017/go-mongodb?authSource=admin"
+            - name: SECRET_KEY
+              value: "wiz-exercise-jwt-secret-2024"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30

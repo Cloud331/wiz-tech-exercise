@@ -1,0 +1,10 @@
+# =============================================================================
+# terraform.tfvars.example — Copy this to terraform.tfvars and fill in values
+# =============================================================================
+# terraform.tfvars is in .gitignore and will NOT be committed.
+# This example file shows what values are needed.
+
+aws_region          = "us-east-1"
+ssh_public_key_path = "C:/ssh-keys/wiz-exercise-key.pub"
+mongo_admin_user    = "dbadmin"
+mongo_admin_pass    = "CHANGE_ME_TO_A_SECURE_PASSWORD"

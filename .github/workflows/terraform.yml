@@ -21,6 +21,8 @@ jobs:
   terraform:
     name: Validate, Scan & Deploy
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_mongo_admin_pass: ${{ secrets.TF_VAR_MONGO_ADMIN_PASS }}
 
     steps:
       # Download repository code to the runner
@@ -65,8 +67,6 @@ jobs:
         working-directory: terraform
         run: terraform plan -no-color
         continue-on-error: true
-        with:
-          TF_VAR_mongo_admin_pass: ${{ secrets.TF_VAR_MONGO_ADMIN_PASS }}
 
       # Only deploy when code is merged to main (not on PRs)
       - name: Terraform Apply

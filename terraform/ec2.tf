@@ -43,7 +43,7 @@ resource "aws_security_group" "mongo" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # CORRECT PRACTICE: MongoDB only accessible from K8s private subnets
+  # MongoDB only accessible from K8s private subnets
   # This satisfies: "Access must be restricted to Kubernetes network access only"
   ingress {
     description = "MongoDB from K8s private subnets only"

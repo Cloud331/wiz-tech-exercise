@@ -1,4 +1,4 @@
-# Wiz Technical Exercise — Arthur Ching
+# Wiz Technical Exercise
 
 ## Architecture
 

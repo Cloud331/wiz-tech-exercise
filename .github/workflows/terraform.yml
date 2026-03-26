@@ -69,7 +69,7 @@ jobs:
         continue-on-error: true
 
       # Only deploy when code is merged to main (not on PRs)
-      - name: Terraform Apply
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        working-directory: terraform
-        run: terraform apply -auto-approve
+      #- name: Terraform Apply
+        #if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        #working-directory: terraform
+        #run: terraform apply -auto-approve

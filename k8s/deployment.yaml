@@ -23,7 +23,7 @@ spec:
             - containerPort: 8080
           env:
             - name: MONGODB_URI
-              value: "mongodb://dbadmin:dbpassword331@10.0.1.182:27017/go-mongodb?authSource=admin"
+              value: "mongodb://dbadmin:dbpassword331@10.0.1.198:27017/go-mongodb?authSource=admin"
             - name: SECRET_KEY
               value: "wiz-exercise-jwt-secret-2024"
           resources:

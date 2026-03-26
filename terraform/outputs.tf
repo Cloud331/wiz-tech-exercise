@@ -1,7 +1,4 @@
-# =============================================================================
-# outputs.tf — Values displayed after terraform apply
-# =============================================================================
-# These are the key pieces of information you'll need after deployment.
+# outputs.tf - Values displayed after terraform apply
 
 output "vpc_id" {
   description = "VPC ID"

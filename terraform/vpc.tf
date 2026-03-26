@@ -1,6 +1,4 @@
-# =============================================================================
-# vpc.tf — Network infrastructure
-# =============================================================================
+# vpc.tf - Network infrastructure
 # This creates the entire network foundation:
 #   - VPC (the isolated network)
 #   - Public subnets (for ALB and MongoDB EC2)
@@ -28,7 +26,7 @@ module "vpc" {
   # NAT Gateway: allows private subnet resources to reach the internet
   # (e.g., EKS nodes pulling container images from ECR)
   enable_nat_gateway   = true
-  single_nat_gateway   = true    # One NAT GW (saves money; use one per AZ in production)
+  single_nat_gateway   = true
 
   # DNS: required for EKS — nodes need to resolve each other by hostname
   enable_dns_hostnames = true

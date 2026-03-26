@@ -1,14 +1,10 @@
-# =============================================================================
-# main.tf — Provider configuration and shared resources
-# =============================================================================
-# This is the entry point for Terraform. It tells Terraform:
+# main.tf - Provider configuration and shared resources
+# Entry Point for Terraform:
 #   1. Which cloud provider to use (AWS)
 #   2. What version of the provider to download
 #   3. Shared resources used by multiple other files
 
-# -----------------------------------------------------------------------------
 # Terraform settings
-# -----------------------------------------------------------------------------
 terraform {
   # Require Terraform version 1.5 or higher
   required_version = ">= 1.5.0"
@@ -20,8 +16,8 @@ terraform {
     }
   }
 
-  # NOTE: For the exercise, we're using local state (stored on your machine).
-  # In production, you'd use remote state in S3 so your team can collaborate:
+  # Using local state (stored on local machine).
+  # In production, we'd use remote state in S3 so the team can collaborate:
   #
   # backend "s3" {
   #   bucket = "my-terraform-state"
@@ -30,18 +26,14 @@ terraform {
   # }
 }
 
-# -----------------------------------------------------------------------------
 # AWS Provider
-# -----------------------------------------------------------------------------
-# Terraform reads your AWS credentials from ~/.aws/credentials
+# Terraform reads AWS credentials from ~/.aws/credentials
 # (set up by `aws configure` in Step 1)
 provider "aws" {
   region = var.aws_region
 }
 
-# -----------------------------------------------------------------------------
 # Random ID for unique naming
-# -----------------------------------------------------------------------------
 # S3 bucket names must be globally unique across ALL AWS accounts.
 # This generates a random 4-byte hex string (e.g., "a1b2c3d4") that we
 # append to bucket names to avoid naming conflicts.
@@ -49,12 +41,10 @@ resource "random_id" "suffix" {
   byte_length = 4
 }
 
-# -----------------------------------------------------------------------------
 # SSH Key Pair
-# -----------------------------------------------------------------------------
 # This creates an SSH key pair in AWS so you can log into the MongoDB EC2 instance.
 # It uses the public key from your local machine.
-#
+
 # If you don't have an SSH key yet, generate one first:
 #   ssh-keygen -t rsa -b 4096 -f ~/.ssh/wiz-exercise-key
 #

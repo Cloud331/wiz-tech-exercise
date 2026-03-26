@@ -1,17 +1,15 @@
-# =============================================================================
-# eks.tf — EKS Kubernetes Cluster
-# =============================================================================
+# eks.tf - EKS Kubernetes Cluster
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
   cluster_name    = "wiz-exercise-cluster"
-  cluster_version = "1.29"
+  cluster_version = "1.32"
 
   # Place the cluster in the VPC we created
   vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets   # Nodes in private subnets (required)
+  subnet_ids = module.vpc.private_subnets   # Nodes in private subnets
 
   # Allow kubectl access from your machine
   cluster_endpoint_public_access = true

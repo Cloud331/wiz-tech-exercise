@@ -1,40 +1,19 @@
-# =============================================================================
-# ec2.tf — MongoDB VM, Security Group, IAM Role
-# =============================================================================
-
+# ec2.tf - MongoDB VM, Security Group, IAM Role
 # -----------------------------------------------------------------------------
-# Find the latest Amazon Linux 2 AMI (intentionally outdated OS — weakness #1)
+# Debian 10 Buster - EOL June 2024 (1+ year outdated)
 # -----------------------------------------------------------------------------
-# This data source queries AWS for the most recent Amazon Linux 2 AMI.
-# Amazon Linux 2 reached end-of-life June 2025 — no more security patches.
-data "aws_ami" "amazon_linux_2" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-}
 
 # Get current AWS account ID (needed for IAM ARNs)
 data "aws_caller_identity" "current" {}
 
-# -----------------------------------------------------------------------------
 # Security Group for MongoDB EC2
-# -----------------------------------------------------------------------------
 resource "aws_security_group" "mongo" {
   name_prefix = "mongo-sg-"
   description = "Security group for MongoDB EC2 instance"
   vpc_id      = module.vpc.vpc_id
 
-  # INTENTIONAL WEAKNESS #2: SSH open to the entire internet
-  # In production: restrict to your IP or use Systems Manager Session Manager
+  # SSH open to the entire internet
+  # In production we would restrict to IP or use Systems Manager Session Manager
   ingress {
     description = "SSH from anywhere (intentional weakness)"
     from_port   = 22
@@ -44,7 +23,6 @@ resource "aws_security_group" "mongo" {
   }
 
   # MongoDB only accessible from K8s private subnets
-  # This satisfies: "Access must be restricted to Kubernetes network access only"
   ingress {
     description = "MongoDB from K8s private subnets only"
     from_port   = 27017
@@ -66,11 +44,8 @@ resource "aws_security_group" "mongo" {
   tags = { Name = "mongo-sg" }
 }
 
-# -----------------------------------------------------------------------------
-# IAM Role for MongoDB EC2 (intentionally overpermissive — weakness #3)
-# -----------------------------------------------------------------------------
-
-# The role itself — defines WHO can use it (EC2 instances)
+# IAM Role for MongoDB EC2 (overpermissive)
+# The role itself — defines who can use it (EC2 instances)
 resource "aws_iam_role" "mongo_ec2" {
   name = "wiz-mongo-ec2-role"
 
@@ -86,8 +61,7 @@ resource "aws_iam_role" "mongo_ec2" {
   tags = { Project = "wiz-exercise" }
 }
 
-# INTENTIONAL WEAKNESS #3: Overpermissive policies
-# The VM only needs s3:PutObject on one bucket, but we give it full EC2 + S3 access
+# The VM only needs s3:PutObject on one bucket, but we gave it full EC2 + S3 access
 resource "aws_iam_role_policy_attachment" "mongo_ec2_full" {
   role       = aws_iam_role.mongo_ec2.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
@@ -104,11 +78,9 @@ resource "aws_iam_instance_profile" "mongo" {
   role = aws_iam_role.mongo_ec2.name
 }
 
-# -----------------------------------------------------------------------------
-# EC2 Instance — MongoDB Server
-# -----------------------------------------------------------------------------
+# EC2 Instance - MongoDB Server
 resource "aws_instance" "mongo" {
-  ami                         = data.aws_ami.amazon_linux_2.id
+  ami                         = "ami-08040345bc0b30c71"
   instance_type               = "t3.medium"        # 2 vCPU, 4GB RAM
   subnet_id                   = module.vpc.public_subnets[0]  # Public subnet (for SSH)
   vpc_security_group_ids      = [aws_security_group.mongo.id]
@@ -116,7 +88,7 @@ resource "aws_instance" "mongo" {
   key_name                    = aws_key_pair.deployer.key_name
   associate_public_ip_address = true   # Needed for SSH access from internet
 
-  # Root volume — 20GB is enough for MongoDB data + backups
+  # Root volume — 20GB should be enough for MongoDB data + backups
   root_block_device {
     volume_size = 20
     volume_type = "gp3"
@@ -133,10 +105,5 @@ resource "aws_instance" "mongo" {
   tags = {
     Name    = "wiz-mongo-server"
     Project = "wiz-exercise"
-  }
-
-  # Don't replace the instance if user_data changes — just update in place
-  lifecycle {
-    ignore_changes = [user_data]
   }
 }

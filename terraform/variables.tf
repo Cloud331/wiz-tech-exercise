@@ -1,6 +1,4 @@
-# =============================================================================
 # variables.tf — Input variable definitions
-# =============================================================================
 # Variables are like function parameters — they let you customise the
 # deployment without changing the code. Values come from terraform.tfvars.
 
@@ -20,7 +18,7 @@ variable "ssh_public_key_path" {
 variable "mongo_admin_user" {
   description = "MongoDB admin username"
   type        = string
-  default     = "wizadmin"
+  default     = "dbadmin"
 }
 
 variable "mongo_admin_pass" {

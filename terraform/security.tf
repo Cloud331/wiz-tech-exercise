@@ -1,10 +1,6 @@
-# =============================================================================
-# security.tf — Cloud Native Security Controls (mandatory section)
-# =============================================================================
+# security.tf - Cloud Native Security Controls
 
-# -----------------------------------------------------------------------------
-# AUDIT: AWS CloudTrail
-# -----------------------------------------------------------------------------
+# AWS CloudTrail
 # Records every API call in the account — the foundation for forensics
 resource "aws_cloudtrail" "main" {
   name                          = "wiz-exercise-trail"
@@ -30,17 +26,13 @@ resource "aws_cloudtrail" "main" {
   tags = { Project = "wiz-exercise" }
 }
 
-# -----------------------------------------------------------------------------
-# PREVENTATIVE: Require IMDSv2 on all EC2 instances
-# -----------------------------------------------------------------------------
+# Require IMDSv2 on all EC2 instances
 # Blocks SSRF-based credential theft from the Instance Metadata Service.
 # This is the technique used in the 2019 Capital One breach.
 resource "aws_ec2_instance_metadata_defaults" "imdsv2" {
   http_tokens = "required"   # Forces IMDSv2 — blocks IMDSv1 requests
 }
 
-# -----------------------------------------------------------------------------
-# DETECTIVE: Amazon GuardDuty
-# -----------------------------------------------------------------------------
+# Amazon GuardDuty
 # ML-based threat detection across CloudTrail, VPC Flow Logs, and DNS logs
 data "aws_guardduty_detector" "existing" {}

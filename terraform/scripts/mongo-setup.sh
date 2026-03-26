@@ -1,33 +1,43 @@
 #!/bin/bash
-# MongoDB Setup Script
+# MongoDB Setup Script — Debian 10
 # Runs once on EC2 first boot via user data
-# Sets up MongoDB, authentication, and daily backups
 
+#Exit script immediately if any command fails
 set -e
+#Log output (normal and error logs)
 exec > /var/log/mongo-setup.log 2>&1
+#Put a timestamp on when it started
 echo "Starting MongoDB setup at $(date)"
 
 # -------------------------------------------------------
 # Step 1: Install MongoDB 4.4
 # -------------------------------------------------------
-cat <<'REPO' > /etc/yum.repos.d/mongodb-org-4.4.repo
-[mongodb-org-4.4]
-name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/amazon/2/mongodb-org/4.4/x86_64/
-gpgcheck=1
-enabled=1
-gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
-REPO
+# Because Debian 10 is officially EOL, the org has moved all of the download repos to their archive servers
+# so even if you run apt-get update, it will look like there are no servers and finds nothing
+echo "deb http://archive.debian.org/debian/ buster main" > /etc/apt/sources.list
+echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list
+#Disables apt's date validation check, as this will bypass EOL repos
+echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
 
-yum install -y mongodb-org-4.4.29 mongodb-org-server-4.4.29 mongodb-org-shell-4.4.29 mongodb-org-tools-4.4.29
+#Update the package list and installs gnupg (used for verifying MongoDB's signing key) and curl downloading files
+apt-get update
+apt-get install -y gnupg curl
+
+#Add MongoDB key and repo
+curl -fsSL https://pgp.mongodb.com/server-4.4.asc | apt-key add -
+echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main" > /etc/apt/sources.list.d/mongodb-org-4.4.list
+
+#Install pinned versions of MongoDB (latest is 8.0.21)
+apt-get update
+apt-get install -y mongodb-org=4.4.29 mongodb-org-server=4.4.29 mongodb-org-shell=4.4.29 mongodb-org-tools=4.4.29
 echo "MongoDB installed"
 
 # -------------------------------------------------------
-# Step 2: Configure MongoDB
+# Step 2: Configure MongoDB - write a new config file, stores its data files, listen on all network interfaces, requires authentication
 # -------------------------------------------------------
 cat <<'CONF' > /etc/mongod.conf
 storage:
-  dbPath: /var/lib/mongo
+  dbPath: /var/lib/mongodb
   journal:
     enabled: true
 systemLog:
@@ -44,7 +54,7 @@ CONF
 echo "MongoDB configured"
 
 # -------------------------------------------------------
-# Step 3: Start MongoDB and create admin user
+# Step 3: Start MongoDB and create admin user - starts mongodb, enables auto-start on reboot, creates admin user with root
 # -------------------------------------------------------
 systemctl start mongod
 systemctl enable mongod
@@ -60,10 +70,17 @@ mongo admin --eval '
 echo "Admin user created"
 
 # -------------------------------------------------------
-# Step 4: Create the daily backup script
+# Step 4: Install AWS CLI V2 - Because Debian 10 doesn't have the latest AWS CLI, need to use AWS CLI v2 or it won't be able to backup to S3
 # -------------------------------------------------------
-yum install -y aws-cli
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+apt-get install -y unzip
+unzip awscliv2.zip
+sudo ./aws/install
 
+# -------------------------------------------------------
+# Step 5: Create the daily backup script - new backup script, timestamp, dumps db to local directory, compresses, uploads to S3, cleans local files
+# -------------------------------------------------------
+# The VM's IAM instance profile provides the AWS credentials so no keys are needed
 cat << 'BACKUP' > /usr/local/bin/mongo-backup.sh
 #!/bin/bash
 MONGO_DATABASE="go-mongodb"
@@ -85,12 +102,12 @@ BACKUP
 chmod +x /usr/local/bin/mongo-backup.sh
 
 # -------------------------------------------------------
-# Step 5: Schedule daily backup at 2 AM
+# Step 6: Schedule daily backup at 2 AM
 # -------------------------------------------------------
 echo "0 2 * * * root /usr/local/bin/mongo-backup.sh >> /var/log/mongo-backup.log 2>&1" > /etc/cron.d/mongo-backup
 
 # -------------------------------------------------------
-# Step 6: Run an initial backup now
+# Step 7: Run an initial backup now
 # -------------------------------------------------------
 /usr/local/bin/mongo-backup.sh || echo "Initial backup may fail if no data yet"
 

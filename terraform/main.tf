@@ -16,14 +16,13 @@ terraform {
     }
   }
 
-  # Using local state (stored on local machine).
-  # In production, we'd use remote state in S3 so the team can collaborate:
-  #
-  # backend "s3" {
-  #   bucket = "my-terraform-state"
-  #   key    = "wiz-exercise/terraform.tfstate"
-  #   region = "us-east-1"
-  # }
+  # Using remote state in S3 so the team can collaborate:
+  
+   backend "s3" {
+     bucket = "wiz-exercise-tfstate-864981756286"
+     key    = "wiz-exercise/terraform.tfstate"
+     region = "us-east-1"
+   }
 }
 
 # AWS Provider
@@ -51,5 +50,5 @@ resource "random_id" "suffix" {
 # On Windows, the path would be: C:\Users\YourName\.ssh\wiz-exercise-key
 resource "aws_key_pair" "deployer" {
   key_name   = "wiz-exercise-key"
-  public_key = file(var.ssh_public_key_path)
+  public_key = var.ssh_public_key
 }

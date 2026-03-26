@@ -67,6 +67,8 @@ jobs:
         working-directory: terraform
         run: terraform plan -no-color
         continue-on-error: true
+        env:
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
 
       # Only deploy when code is merged to main (not on PRs)
       #- name: Terraform Apply

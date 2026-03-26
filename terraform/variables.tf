@@ -28,3 +28,8 @@ variable "mongo_admin_pass" {
   # sensitive = true means Terraform will show "(sensitive value)" in output
   # instead of the actual password. This prevents accidental exposure in logs.
 }
+
+variable "ssh_public_key" {
+  description = "SSH public key content"
+  type        = string
+}
